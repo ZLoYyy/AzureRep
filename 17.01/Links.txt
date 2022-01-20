@@ -1,5 +1,5 @@
-1.	https://datamanagement.hms.harvard.edu/collect/file-naming-conventions
-2.	https://netology-university.bitbucket.io/codestyle/naming/
-3.	https://huridocs.org/resource-library/organising-a-collection-of-human-rights-information/file-naming-conventions/
-4.	https://www.abdn.ac.uk/staffnet/documents/policy-zone-information-policies/File%20Naming%20Conventions%20July%202017.pdf
-5.	http://it-uroki.ru/uroki/pravilnye-imena-fajlov.html
+1. https://datamanagement.hms.harvard.edu/collect/file-naming-conventions
+2. https://netology-university.bitbucket.io/codestyle/naming/
+3. https://huridocs.org/resource-library/organising-a-collection-of-human-rights-information/file-naming-conventions/
+4. https://www.abdn.ac.uk/staffnet/documents/policy-zone-information-policies/File%20Naming%20Conventions%20July%202017.pdf
+5. http://it-uroki.ru/uroki/pravilnye-imena-fajlov.html
