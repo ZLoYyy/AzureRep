@@ -260,7 +260,7 @@ Function ReadData
     }
 }
 
-$WorkSheets = Get-ExcelSheetInfo -Path E:\Shedule\Test2Сентябрь.csv
+$WorkSheets = Get-ExcelSheetInfo -Path E:\Shedule\excel\CMC.xlsx
 
 #Перебираем все листы
 Foreach($sheet in $WorkSheets)
