@@ -1,15 +1,19 @@
-﻿<#
-    Сохранение данных в бд
-#>
-Function ToSql ($Data, $TableName) 
- {
-    $dbName = "DBTest"
-    $user = "DESKTOP-IFQ91DF\ZLoY"
-    $password = ""
-    $server = "DESKTOP-IFQ91DF\SQLEXPRESS01"
+Function ToDB()
+{
+    param(
+        $ArrayRow, 
+        [int]$TableID,
+        [DateTime]$Date
+    )
 
+    $dbName = "ExportedFromExcel"
+    $user = "de-team-admin"
+    $password = "DEpassword0"
+    $server = "tcp:de-team.database.windows.net,1433"
+    
     $sqlConn = New-Object System.Data.SqlClient.SqlConnection
-    $sqlConn.ConnectionString = ("Server={0};Initial Catalog={1};Persist Security Info=False;Integrated Security=true;User ID={2};Password={3};MultipleActiveResultSets=False;Encrypt=False;TrustServerCertificate=False;Connection Timeout=30;" -f $server, $dbName, $user, $password)
+    $sqlConn.ConnectionString = ("Server={0};Initial Catalog={1};Persist Security Info=False;User ID={2};Password={3};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;" -f $server, $dbName, $user, $password)
+
     try
     {
         #Open connection
@@ -17,258 +21,299 @@ Function ToSql ($Data, $TableName)
 
 	    #Creacte command
 	    $sqlcmd = $sqlConn.CreateCommand()
-
-    Foreach ($subData in $Data)
-    {
-        $sqlcmd.Parameters.Clear()
-        switch ( $TableName )
-        {
-            "SMS_ore_supply_0_300" 
-            { 
-               $sqlcmd.CommandText =
+        switch ( $TableID )
+        {    
+            1 
+            {
+                try
+                {
+                    $date = ("{0}" -f [DateTime]::FromOADate($ArrayRow.'Дата')) 
+                }
+                catch
+                {
+                    if($script:SMS_ore_supply_0_300_date)
+                    {
+                        $date = $script:SMS_ore_supply_0_300_date
+                    }
+                }
+                $script:SMS_ore_supply_0_300_date = $date
+                $work_shift = ("{0}" -f $ArrayRow.'Смена/отбор пробы') 
+                $charge_number = ("{0}" -f $ArrayRow.'№ шихты') 
+                $fe_percent = ("{0}" -f $ArrayRow.'%Fe') 
+                $ton_count = ("{0}" -f $ArrayRow.'тонн') 
+                $metal_ton_count = ("{0}" -f $ArrayRow.'металл, т')
+                if(!$work_shift -and !$charge_number -and !$fe_percent -and !$ton_count -and !$metal_ton_count)  
+                { 
+                    $sqlConn.Close()
+                    return 
+                }
+                
+                $sqlcmd.CommandText =
 @"
-IF NOT EXISTS (select 1 from SMS_ore_supply_0_300 where date=@date AND work_shift=@work_shift)
-BEGIN
-    INSERT INTO [SMS_ore_supply_0_300] ([date],[work_shift],[charge_number],[fe_percent],[ton_count],[metal_ton_count] )
-                          values  (@date,@work_shift,@charge_number,@fe_percent,@ton_count,@metal_ton_count )
-END
+    IF NOT EXISTS (select 1 from SMS_ore_supply_0_300 where date=@date AND work_shift=@work_shift)
+    BEGIN
+        INSERT INTO [SMS_ore_supply_0_300] ([date],[work_shift],[charge_number],[fe_percent],[ton_count],[metal_ton_count] )
+                              values  (@date,@work_shift,@charge_number,@fe_percent,@ton_count,@metal_ton_count )
+    END
 
 "@; 
 
-                $sqlcmd.Parameters.Add("@date", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@work_shift", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@charge_number", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@fe_percent", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@ton_count", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@metal_ton_count", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters["@date"].Value = ("{0}" -f $subData.date) 
-                $sqlcmd.Parameters["@work_shift"].Value = ("{0}" -f $subData.work_shift) 
-                $sqlcmd.Parameters["@charge_number"].Value = ("{0}" -f $subData.charge_number) 
-                $sqlcmd.Parameters["@fe_percent"].Value = ("{0}" -f $subData.fe_percent) 
-                $sqlcmd.Parameters["@ton_count"].Value = ("{0}" -f $subData.ton_count) 
-                $sqlcmd.Parameters["@metal_ton_count"].Value = ("{0}" -f $subData.metal_ton_count) 
+                    $sqlcmd.Parameters.Add("@date", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@work_shift", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@charge_number", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@fe_percent", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@ton_count", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@metal_ton_count", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters["@date"].Value = $date
+                    $sqlcmd.Parameters["@work_shift"].Value = $work_shift
+                    $sqlcmd.Parameters["@charge_number"].Value = $charge_number
+                    $sqlcmd.Parameters["@fe_percent"].Value = $fe_percent
+                    $sqlcmd.Parameters["@ton_count"].Value = $ton_count
+                    $sqlcmd.Parameters["@metal_ton_count"].Value = $metal_ton_count
             }
-            "SMS_ore_output_0_10" 
+            2 
             { 
-            $sqlcmd.CommandText =
+                try
+                {
+                    $date = ("{0}" -f [DateTime]::FromOADate($ArrayRow.'Дата')) 
+                }
+                catch
+                {
+                    if($script:SMS_ore_output_0_10_date)
+                    {
+                        $date = $script:SMS_ore_output_0_10_date
+                    }
+                }
+                $script:SMS_ore_output_0_10_date = $date
+                $type = ("{0}" -f $ArrayRow.'тип')
+                $charge_number = ("{0}" -f $ArrayRow.'№ шихты') 
+                $fe_percent = ("{0}" -f $ArrayRow.'%Fe') 
+                $ton_count = ("{0}" -f $ArrayRow.'тонн') 
+                $metal_ton_count = ("{0}" -f $ArrayRow.'металл, т')
+                if(!$type -and !$charge_number -and !$fe_percent -and !$ton_count -and !$metal_ton_count)  
+                { 
+                    $sqlConn.Close()
+                    return 
+                }
+                $sqlcmd.CommandText =
 @"
-IF NOT EXISTS (select 1 from SMS_ore_output_0_10 where date=@date AND type=@type)
-BEGIN
-INSERT INTO [SMS_ore_output_0_10] ([date],[type],[charge_number],[fe_percent],[ton_count],[metal_ton_count] )
-                          values  (@date,@type,@charge_number,@fe_percent,@ton_count,@metal_ton_count )
-END
+    IF NOT EXISTS (select 1 from SMS_ore_output_0_10 where date=@date AND type=@type)
+    BEGIN
+    INSERT INTO [SMS_ore_output_0_10] ([date],[type],[charge_number],[fe_percent],[ton_count],[metal_ton_count] )
+                              values  (@date,@type,@charge_number,@fe_percent,@ton_count,@metal_ton_count )
+    END
 "@;    
 
-                $sqlcmd.Parameters.Add("@date", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@type", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@charge_number", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@fe_percent", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@ton_count", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@metal_ton_count", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters["@date"].Value = ("{0}" -f $subData.date)
-                $sqlcmd.Parameters["@type"].Value = ("{0}" -f $subData.type)
-                $sqlcmd.Parameters["@charge_number"].Value = ("{0}" -f $subData.charge_number)
-                $sqlcmd.Parameters["@fe_percent"].Value = ("{0}" -f $subData.fe_percent)
-                $sqlcmd.Parameters["@ton_count"].Value =("{0}" -f $subData.ton_count)
-                $sqlcmd.Parameters["@metal_ton_count"].Value = ("{0}" -f $subData.metal_ton_count)
+                    $sqlcmd.Parameters.Add("@date", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@type", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@charge_number", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@fe_percent", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@ton_count", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@metal_ton_count", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters["@date"].Value = $date
+                    $sqlcmd.Parameters["@type"].Value = $type
+                    $sqlcmd.Parameters["@charge_number"].Value = $charge_number
+                    $sqlcmd.Parameters["@fe_percent"].Value = $fe_percent
+                    $sqlcmd.Parameters["@ton_count"].Value = $ton_count
+                    $sqlcmd.Parameters["@metal_ton_count"].Value = $metal_ton_count
             }
-            "SMS_total_ore_supply" 
+            3 
             {
-             $sqlcmd.CommandText =
+                $value = ("{0}" -f $ArrayRow.'ИТОГО ПОДАЧА РУДЫ в месяц') 
+                
+                if(!$value)  
+                { 
+                    $sqlConn.Close()
+                    return 
+                }
+
+                $sqlcmd.CommandText =
 @"
-IF NOT EXISTS (select 1 from SMS_total_ore_supply where month=@month)
-BEGIN
-INSERT INTO [SMS_total_ore_supply] ([month],[value])
-                          values  (@month,@value)
-END
+    IF NOT EXISTS (select 1 from SMS_total_ore_supply WHERE YEAR(date)=YEAR(@date) AND MONTH(date)=MONTH(@date))
+    BEGIN
+    INSERT INTO [SMS_total_ore_supply] ([date],[value])
+                              values  (@date,@value)
+    END
 "@;  
                 
-                $sqlcmd.Parameters.Add("@month", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@value", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters["@month"].Value = ("{0}" -f $subData.month)
-                $sqlcmd.Parameters["@value"].Value = ("{0}" -f $subData.value)
+                    $sqlcmd.Parameters.Add("@date", [Data.SQLDBType]::DateTime, 30)
+                    $sqlcmd.Parameters.Add("@value", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters["@date"].Value = $Date
+                    $sqlcmd.Parameters["@value"].Value = $value
             }
-            "SMS_salable_ore_stacks_0_10" 
-            { 
-            $sqlcmd.CommandText =
+            4 
+            {
+
+                $stack_number = ("{0}" -f $ArrayRow.'№ штабеля')
+                $actual_tonn_count = ("{0}" -f $ArrayRow.'Фактич. остаток т.')
+                $fe_percent = ("{0}" -f $ArrayRow.'Fe%')
+                $metal_ton_count = ("{0}" -f $ArrayRow.'Металл в т.')
+                $notes = ("{0}" -f $ArrayRow.'Примечания')
+                               
+                if(!$stack_number -and !$actual_tonn_count -and !$fe_percent -and !$metal_ton_count)  
+                { 
+                    $sqlConn.Close()
+                    return 
+                }
+
+                $sqlcmd.CommandText =
 @"
-IF NOT EXISTS (select 1 from SMS_salable_ore_stacks_0_10 where stack_number=@stack_number AND month=@month)
-BEGIN
-INSERT INTO [SMS_salable_ore_stacks_0_10] ([stack_number],[actual_tonn_count],[fe_percent],[metal_ton_count],[notes],[month])
-                                  values  (@stack_number,@actual_tonn_count,@fe_percent,@metal_ton_count,@notes,@month )
-END
+    IF NOT EXISTS (select 1 from SMS_salable_ore_stacks_0_10 where stack_number=@stack_number AND YEAR(date)=YEAR(@date) AND MONTH(date)=MONTH(@date))
+    BEGIN
+    INSERT INTO [SMS_salable_ore_stacks_0_10] ([stack_number],[actual_tonn_count],[fe_percent],[metal_ton_count],[notes],[date])
+                                      values  (@stack_number,@actual_tonn_count,@fe_percent,@metal_ton_count,@notes,@date)
+    END
 "@; 
                 
-                $sqlcmd.Parameters.Add("@stack_number", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@actual_tonn_count", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@fe_percent", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@metal_ton_count", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@notes", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@month", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters["@stack_number"].Value = ("{0}" -f $subData.stack_number)
-                $sqlcmd.Parameters["@actual_tonn_count"].Value = ("{0}" -f $subData.actual_tonn_count)
-                $sqlcmd.Parameters["@fe_percent"].Value = ("{0}" -f $subData.fe_percent)
-                $sqlcmd.Parameters["@metal_ton_count"].Value = ("{0}" -f $subData.metal_ton_count)
-                $sqlcmd.Parameters["@notes"].Value = ("{0}" -f $subData.notes)
-                $sqlcmd.Parameters["@month"].Value = ("{0}" -f $subData.month)
+                    $sqlcmd.Parameters.Add("@stack_number", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@actual_tonn_count", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@fe_percent", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@metal_ton_count", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@notes", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@date", [Data.SQLDBType]::DateTime, 30)
+                    $sqlcmd.Parameters["@stack_number"].Value = $stack_number
+                    $sqlcmd.Parameters["@actual_tonn_count"].Value = $actual_tonn_count
+                    $sqlcmd.Parameters["@fe_percent"].Value = $fe_percent
+                    $sqlcmd.Parameters["@metal_ton_count"].Value = $metal_ton_count
+                    $sqlcmd.Parameters["@notes"].Value = $notes
+                    $sqlcmd.Parameters["@date"].Value = $Date
             }
-            "SMS_Tailings_1_dump" 
-            { 
-            $sqlcmd.CommandText =
+            5 
+            {
+                $dump_number = ("{0}" -f $ArrayRow.'№ отвала')
+                $ton_count = ("{0}" -f $ArrayRow.'тонн')
+                $metal_count = ("{0}" -f $ArrayRow.'металл')
+                $percent = ("{0}" -f $ArrayRow.'%')
+                               
+                if(!$ton_count -and !$metal_count -and !$percent)  
+                { 
+                    $sqlConn.Close()
+                    return 
+                }
+
+                $sqlcmd.CommandText =
 @"
-IF NOT EXISTS (select 1 from SMS_Tailings_1_dump where dump_number=@dump_number AND month=@month)
-BEGIN
-INSERT INTO [SMS_Tailings_1_dump] ([dump_number],[ton_count],[metal_count],[percent],[month])
-                          values  (@dump_number,@ton_count,@metal_count,@percent,@month)
-END
+    IF NOT EXISTS (select 1 from SMS_Tailings_1_dump where dump_number=@dump_number AND YEAR(date)=YEAR(@date) AND MONTH(date)=MONTH(@date))
+    BEGIN
+    INSERT INTO [SMS_Tailings_1_dump] ([dump_number],[ton_count],[metal_count],[percent],[date])
+                              values  (@dump_number,@ton_count,@metal_count,@percent,@date)
+    END
 "@; 
 
-                $sqlcmd.Parameters.Add("@dump_number", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@ton_count", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@metal_count", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@percent", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters.Add("@month", [Data.SQLDBType]::NVarChar, 50)
-                $sqlcmd.Parameters["@dump_number"].Value = ("{0}" -f $subData.dump_number)
-                $sqlcmd.Parameters["@ton_count"].Value = ("{0}" -f $subData.ton_count)
-                $sqlcmd.Parameters["@metal_count"].Value = ("{0}" -f $subData.metal_count)
-                $sqlcmd.Parameters["@percent"].Value = ("{0}" -f $subData.percent)
-                $sqlcmd.Parameters["@month"].Value = ("{0}" -f $subData.month)
+                    $sqlcmd.Parameters.Add("@dump_number", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@ton_count", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@metal_count", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@percent", [Data.SQLDBType]::NVarChar, 50)
+                    $sqlcmd.Parameters.Add("@date", [Data.SQLDBType]::DateTime, 30)
+                    $sqlcmd.Parameters["@dump_number"].Value = $dump_number
+                    $sqlcmd.Parameters["@ton_count"].Value = $ton_count
+                    $sqlcmd.Parameters["@metal_count"].Value = $metal_count
+                    $sqlcmd.Parameters["@percent"].Value = $percent
+                    $sqlcmd.Parameters["@date"].Value = $Date
             }
         }
-	    $sqlcmd.ExecuteNonQuery()
+    
+        $sqlcmd.ExecuteNonQuery()
 
-}
-	    #Close connection	
+        #Close connection	
 	    $sqlConn.Close()
     }
     catch
-    {	
-	    $sqlConn.Close()
+    {
+        $sqlConn.Close()
 	    Write-Error -Message $_.Exception
             throw $_.Exception
     }
- }
-
-$script:SMS_ore_supply_0_300_data = @()
-$script:SMS_ore_output_0_10_data = @()
-$script:SMS_total_ore_supply_data = @()
-$script:SMS_salable_ore_stacks_0_10_data = @()
-$script:SMS_Tailings_1_dump_data = @()
-<#
-    Получение данных из xlsx
-#>
-Function ReadData 
-{
-    param(
-[string]$Path,
-[string]$Sheet
-)
-
-    #Подача руды 0-300
-    $SMS_ore_supply_0_300 = Import-Excel -Path $Path -StartRow 5 -StartColumn 2 -EndColumn 7 -WorksheetName $Sheet
-    #Выход руды 0-10
-    $SMS_ore_output_0_10 = Import-Excel -Path $Path -StartRow 5 -StartColumn 8 -EndColumn 15 -WorksheetName $Sheet
-    #ИТОГО ПОДАЧА РУДЫ в месяц
-    $SMS_total_ore_supply = Import-Excel -Path $Path -StartRow 1 -StartColumn 16 -EndColumn 16 -WorksheetName $Sheet
-    #ШТАБЕЛИ ТОВАРНОЙ РУДЫ 0-10
-    $SMS_salable_ore_stacks_0_10 = Import-Excel -Path $Path -StartRow 2 -StartColumn 17 -EndColumn 22 -WorksheetName $Sheet
-    #Хвосты-1  Отвал
-    $SMS_Tailings_1_dump = Import-Excel -Path $Path -StartRow 2 -StartColumn 23 -EndColumn 26 -WorksheetName $Sheet
-
-
-
-    ForEach ($ExcelLok in $SMS_ore_supply_0_300)
-    {
-        if($ExcelLok.Дата -eq $null){continue}
-        try{
-            $RowHash = @{ 
-                      date = [DateTime]::FromOADate($ExcelLok.Дата)
-                      work_shift = $ExcelLok.Смена
-                      charge_number = $ExcelLok.'№ шихты'
-                      fe_percent = $ExcelLok.'%Fe'
-                      ton_count = $ExcelLok.тонн
-                      metal_ton_count = $ExcelLok.'металл, т'
-                    }
-            $script:SMS_ore_supply_0_300_data += $RowHash
-        }
-        catch{continue}    
-    }
-    $date = ""
-    ForEach ($ExcelLok in $SMS_ore_output_0_10)
-    {
-        if($ExcelLok.Дата -eq $null -and $ExcelLok.'№ шихты' -eq $null -and $ExcelLok.тип -eq $null){continue}
-        if($ExcelLok.Дата -eq $null){$ExcelLok.Дата = $date}
-        $date = $ExcelLok.Дата
-        try
-        {
-            $RowHash = @{ 
-                          date = [DateTime]::FromOADate($ExcelLok.Дата)
-                          charge_number = $ExcelLok.'№ шихты'
-                          type = $ExcelLok.тип
-                          fe_percent = $ExcelLok.'%Fe'
-                          ton_count = $ExcelLok.тонн
-                          metal_ton_count = $ExcelLok.'металл, т'
-                        }
-
-                $script:SMS_ore_output_0_10_data += $RowHash
-        }
-        catch{continue}
     
-    }
-
-    ForEach ($ExcelLok in $SMS_total_ore_supply)
-    {
-        $ExcelLok
-        if($ExcelLok.'ИТОГО ПОДАЧА РУДЫ в месяц' -eq $null){continue}
- 
-        $RowHash = @{ 
-                      month = $Sheet
-                      value = $ExcelLok.'ИТОГО ПОДАЧА РУДЫ в месяц'
-                    }
-        
-         $script:SMS_total_ore_supply_data += $RowHash
-    }
-
-    ForEach ($ExcelLok in $SMS_salable_ore_stacks_0_10)
-    {
-        if($ExcelLok.'№ п/п' -eq $null){continue}
-
-        $RowHash = @{ stack_number = $ExcelLok.'№ штабеля' 
-                      actual_tonn_count = $ExcelLok.'Фактич. остаток т.'
-                      fe_percent = $ExcelLok.'Fe%'
-                      metal_ton_count = $ExcelLok.'Металл в т.'
-                      notes = $ExcelLok.Примечания
-                      month = $Sheet
-                    }
-     
-        $script:SMS_salable_ore_stacks_0_10_data += $RowHash
-    }
-
-    ForEach ($ExcelLok in $SMS_Tailings_1_dump)
-    {
-        if($ExcelLok.'№ отвала' -eq $null){continue}
-    
-        $RowHash = @{ 
-                      dump_number = $ExcelLok.'№ отвала' 
-                      ton_count = $ExcelLok.тонн
-                      metal_count = $ExcelLok.металл
-                      percent = $ExcelLok.'%'
-                      month = $Sheet
-                    }
-
-        $script:SMS_Tailings_1_dump_data += $RowHash
-    }
+    #$text = "ID="+$TableID
+    #Write-Output $text
+    #$ArrayRow
 }
 
-$WorkSheets = Get-ExcelSheetInfo -Path E:\Shedule\excel\CMC.xlsx
+$RunAsConnection = Get-AutomationConnection -Name "AzureRunAsConnection"
+Connect-AzAccount -ServicePrincipal -Tenant $RunAsConnection.TenantId -ApplicationId $RunAsConnection.ApplicationId -CertificateThumbprint $RunAsConnection.CertificateThumbprint | Write-Verbose
+Set-AzContext -Subscription $RunAsConnection.SubscriptionID | Write-Verbose
 
-#Перебираем все листы
-Foreach($sheet in $WorkSheets)
+$resourceGroupName="azureapp-auto-alerts-6b09d6-d_shishpor_aspex_kz"  
+$StorageAccountName="deshishpor"  
+$containerName="xlsx-file" 
+
+$storageAcc=Get-AzStorageAccount -ResourceGroupName $resourceGroupName -Name $StorageAccountName 
+$Context=$storageAcc.Context  
+
+$blobs=Get-AzStorageBlob -Container $containerName -Context $Context
+
+foreach($blob in $blobs)
 {
-    ReadData -Path E:\Shedule\Test2.xlsx -Sheet $sheet.Name
-    ToSql -Data $script:SMS_ore_supply_0_300_data -TableName "SMS_ore_supply_0_300"
-    ToSql -Data $script:SMS_ore_output_0_10_data -TableName "SMS_ore_output_0_10"
-    ToSql -Data $script:SMS_total_ore_supply_data -TableName "SMS_total_ore_supply"
-    ToSql -Data $script:SMS_salable_ore_stacks_0_10_data -TableName "SMS_salable_ore_stacks_0_10"
-    ToSql -Data $script:SMS_Tailings_1_dump_data -TableName "SMS_Tailings_1_dump"
+    $encoding = New-Object System.Text.UTF8Encoding
+	$delimiter = ","
+	$reader = $blob.OpenRead() 
+	$reader = New-Object System.IO.StreamReader($reader)
+	$headers = $reader.ReadLine() -split $delimiter 
+	$result = [ordered]@{}    
+    
+	foreach($header in $headers) 
+	{        
+		$result[$header] = 0
+	}
+    
+    $name = $blob.Name.Split(".")
+    
+    # Формат файла [Содержание файла]_[год]_[Название листа]_[ид таблицы].csv 
+    $FileData = $name.Split('_')[0]
+    $Year = $name.Split('_')[1]
+    $SheetName = $name.Split('_')[2]
+    $id = $name.Split('_')[3]
+    $Month = 0
+
+    switch ( $SheetName )
+    {    
+            "Январь" 
+            { $Month = 1 }
+            "Февраль" 
+            { $Month = 2 }
+            "Март" 
+            { $Month = 3 }
+            "Апрель" 
+            { $Month = 4 }
+            "Май" 
+            { $Month = 5 }
+            "Июнь" 
+            { $Month = 6 }
+            "Июль" 
+            { $Month = 7 }
+            "Август" 
+            { $Month = 8 }
+            "Сентябрь" 
+            { $Month = 9 }
+            "Октябрь" 
+            { $Month = 10 }
+            "Ноябрь" 
+            { $Month = 11 }
+            "Декабрь" 
+            { $Month = 12 }
+    }
+
+    $str = $Year +'-'+ $Month +"-01" 
+    $Date =  [DateTime]$str
+
+    while(-not $reader.EndOfStream) 
+	{
+		# Get Header  in first line
+		try{		
+           
+		    $csv = $reader.ReadLine() | ConvertFrom-Csv -Header $headers -Delimiter $delimiter 
+            
+            #Удаляем ненужные свойства
+            $csv.PSObject.Properties.Remove('ItemInternalId')
+            $csv.PSObject.Properties.Remove('@odata.etag')
+            
+            ToDB -ArrayRow  $csv -TableID $id -Date $Date
+		}
+	    catch
+        {
+            Write-Error -Message $_.Exception
+            throw $_.Exception
+        }
+	}
 }
